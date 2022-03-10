@@ -30,8 +30,8 @@ app.get('/items',async (req, res) => {
   res.send(items)
 })
 
-app.get('/item/:name',async (req,res) => {
-    const title = req.params.name
+app.get('/item/:title',async (req,res) => {
+    const title = req.params.title
     try  {
       const item = await prisma.item.findFirst({
         where:{title}
@@ -95,7 +95,7 @@ app.patch('/order',async (req, res) => {
         item:true
       },
       where:{
-        id: id
+        id:id
       },
       data:{
         quantity: quantity
@@ -108,10 +108,29 @@ app.patch('/order',async (req, res) => {
   }
 })
 
+app.delete('/order/:id',async (req, res) => {
+    const id = Number(req.params.id)
+    try{
+
+      // const {email, title} = req.body
+      const deletedOrder = await prisma.order.delete({ where: { id:id }})
+
+      console.log(deletedOrder)
+      if(deletedOrder){
+        res.send({message:"Order deleted succesfully"})
+      } else{
+        res.send({message:"There is no order with that id"})
+      }
+
+    }catch(err){
+      // @ts-ignore
+      res.status(400).send(err.message)
+    }
+})
+
+// Get detailed user
 app.get('/users/:name',async (req,res) => {
    const name = req.params.name
-
-
    const userFound = await prisma.user.findFirst({
       where: {name: name},
       include: { 
@@ -125,6 +144,8 @@ app.get('/users/:name',async (req,res) => {
       res.status(404).send({message:"User not found"})
     }
   })
+
+// Update User
 app.patch('/users/:name',async (req,res) => {
   const name = req.params.name
 
@@ -152,31 +173,57 @@ app.patch('/users/:name',async (req,res) => {
       }
     }
   })
+app.delete('/users/:name'   ,async (req, res) => {
+  const name = req.params.name 
+})
 
+
+// Login user
 app.post('/login',async (req,res) => {
     const {email, password} = req.body
-
     try{
-
-      const user = await prisma.user.findFirst({
-        where:{
-          AND:[
-            { email },
-            { password}
-          ]
-        }
-      })
-      if(user){
-        res.send(user)
-      }else{
-        res.status(404).send({message:"User doesnt exist"})
+      if(email && password){
+        const user = await prisma.user.findFirst({
+          where:{
+              email,
+              password
+          },
+          include:{
+            orders:{
+              include: {item:true}
+            }
+          }
+        })
+        if(user){ res.send(user) } 
+          else{ res.status(404).send({message:"User doesnt exist"}) }
+      } else{
+        res.status(404).send({message: "Email or password undefined"})
       }
     }catch(err){
       // @ts-ignore
       res.send(err.message)
     }
-      
 } )
+
+// Register user
+app.post('/register',async (req,res) => {
+  const { name, email, password} = req.body 
+
+  try{
+    if(name && email && password){
+      const createdUser = await prisma.user.create({
+        data:{
+          name, email, password
+        },
+      })
+    } else{
+      res.status(404).send({message:"Name, Email or password is missing"}) 
+    }
+  } catch (err){
+    // @ts-ignore
+    res.status(400).send(err.message)
+  }   
+})
 
 
 

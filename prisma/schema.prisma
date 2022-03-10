@@ -11,26 +11,29 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  name     String  @unique
-  password String  @default("password")
+  id       Int      @id @default(autoincrement())
+  email    String   @unique
+  name     String   @unique
+  password String   @default("password")
+  joinedAt DateTime @default(now())
   orders   Order[]
 }
 
 model Item {
-  id     Int     @id @default(autoincrement())
-  title  String  @unique
-  image  String  @unique
-  price  Float
-  orders Order[]
+  id        Int      @id @default(autoincrement())
+  title     String   @unique
+  image     String   @unique
+  createdAt DateTime @default(now())
+  price     Float
+  orders    Order[]
 }
 
 model Order {
-  id       Int  @id @default(autoincrement())
-  quantity Int
-  user     User @relation(fields: [userId], references: [id])
-  item     Item @relation(fields: [itemId], references: [id])
-  userId   Int
-  itemId   Int
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  user      User     @relation(fields: [userId], references: [id])
+  item      Item     @relation(fields: [itemId], references: [id])
+  createdAt DateTime @default(now())
+  userId    Int
+  itemId    Int
 }
